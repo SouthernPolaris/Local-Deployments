@@ -1,0 +1,24 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Static analytics and tooling caches
+.ruff_cache/
+.mypy_cache/
+.ipynb_cache/
+
+# OS Specific
+.DS_Store
+Thumbs.db

@@ -9,12 +9,14 @@ dependencies = [
     "networkx>=3.6.1",
     "proxmoxer>=2.2.0",
     "pydantic>=2.12.5",
+    "pytest>=9.0.2",
     "python-dotenv>=1.2.1",
     "uvicorn>=0.40.0",
 ]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "mypy>=1.19.1",
     "ruff>=0.14.14",
 ]
@@ -48,3 +50,7 @@ exclude = ["venv/", ".venv"]
 [[tool.mypy.overrides]]
 module = "proxmoxer.*"
 ignore_missing_imports = true # Proxmoxer has some dynamic imports that mypy can't resolve
+
+[tool.pytest.ini_options]
+pythonpath = ["backend"]
+testpaths = ["backend/tests"]

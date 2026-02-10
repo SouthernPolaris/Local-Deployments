@@ -1,3 +1,7 @@
+"""
+Schemas defining the structure of the request body for cyber range deployment
+"""
+
 from typing import Literal
 from uuid import UUID
 
@@ -23,6 +27,11 @@ class VMNode(BaseModel):
     template_id: int
     role: Literal["jumpbox_main", "jumpbox_local", "service"]
     resources: VMResource = Field(default_factory=VMResource)
+
+    # Store position for frontend graph layout (optional, can be ignored by backend)
+    position: dict = {"x": 0, "y": 0}
+
+    vmid: int | None = None
 
 
 # --- Connection between VMs ---

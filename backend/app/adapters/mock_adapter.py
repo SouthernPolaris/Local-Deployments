@@ -1,3 +1,7 @@
+"""
+Mock adapter for testing and development without a real Proxmox cluster
+"""
+
 import random
 import time
 from typing import Any
@@ -19,7 +23,11 @@ class MockAdapter(ICloudAdapter):
         ]
 
     def clone_node(self, template_id: int, newid: int, name: str) -> None:
-        """Simulates the latency of cloning a VM."""
+        """
+        Simulates the latency of cloning a VM
+        NOTE: Implementations should ensure 'newid' is not already occupied
+        by the provider's API.
+        """
         print(
             f"DEBUG: [Mock] Starting clone of template {template_id} to ID {newid}..."
         )
@@ -29,3 +37,14 @@ class MockAdapter(ICloudAdapter):
 
         self.deployed_vms.append(newid)
         print(f"DEBUG: [Mock] VM '{name}' (ID: {newid}) is now READY.")
+
+    def delete_vm(self, vmid: int):
+        """Simulates destroying a VM"""
+        if vmid in self.deployed_vms:
+            self.deployed_vms.remove(vmid)
+        print(f"DEBUG: [Mock] VM {vmid} DESTROYED.")
+
+    def configure_network(self, vmid: int, bridges: list[str]):
+        """Simulates attaching virtual cables to bridges"""
+        for i, bridge in enumerate(bridges):
+            print(f"DEBUG: [Mock] VM {vmid} -> net{i} connected to {bridge}")

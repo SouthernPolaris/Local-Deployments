@@ -1,7 +1,8 @@
 import os
 import time
+from typing import Any, cast
+
 import urllib3
-from typing import Any, cast, Dict
 from app.adapters.iadapter import ICloudAdapter
 from dotenv import load_dotenv
 from proxmoxer import ProxmoxAPI
@@ -10,6 +11,7 @@ from proxmoxer import ProxmoxAPI
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 load_dotenv()
+
 
 class ProxmoxAdapter(ICloudAdapter):
     def __init__(self):
@@ -53,10 +55,12 @@ class ProxmoxAdapter(ICloudAdapter):
         """Implemented: Handles async cloning and task waiting."""
         node = self._get_node()
         try:
-            upid = self.api.nodes(node).qemu(template_id).clone.post(
-                newid=newid, name=name, full=1
+            upid = (
+                self.api.nodes(node)
+                .qemu(template_id)
+                .clone.post(newid=newid, name=name, full=1)
             )
-            
+
             if isinstance(upid, str):
                 print(f"Clone started (UPID: {upid}). Waiting...")
                 self._wait_for_task(upid)
@@ -74,7 +78,7 @@ class ProxmoxAdapter(ICloudAdapter):
             if isinstance(stop_upid, str):
                 print(f"Stopping VM {vmid}...")
                 self._wait_for_task(stop_upid)
-            
+
             # Delete command
             print(f"Deleting VM {vmid}...")
             self.api.nodes(node).qemu(vmid).delete()
@@ -100,8 +104,8 @@ class ProxmoxAdapter(ICloudAdapter):
         node = self._get_node()
         start = time.time()
         while time.time() - start < timeout:
-            status = cast(Dict[str, Any], self.api.nodes(node).tasks(upid).status.get())
-            
+            status = cast(dict[str, Any], self.api.nodes(node).tasks(upid).status.get())
+
             if status and status.get("status") == "stopped":
                 exitstatus = status.get("exitstatus")
                 if exitstatus == "OK":

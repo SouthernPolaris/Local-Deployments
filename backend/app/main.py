@@ -23,6 +23,7 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api/v1")
 
+
 @app.get("/")
 async def root():
     return {"message": "Cyber Range API is Online", "mode": "Mock" if True else "Prod"}

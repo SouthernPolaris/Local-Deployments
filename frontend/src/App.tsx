@@ -71,7 +71,7 @@ export default function App() {
       nodes: nodes.map((n: Node<VMNodeData>) => ({ 
         id: n.id, 
         label: n.data.label, 
-        template_id: 1001, 
+        template_id: 100, 
         role: n.data.role || (n.id === FIXED_MASTER_ID ? 'jumpbox_main' : 'service'),
         position: n.position 
       })),

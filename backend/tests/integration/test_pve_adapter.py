@@ -1,29 +1,48 @@
 from app.adapters.pve_adapter import ProxmoxAdapter
 
-# IMPORTANT: Update these IDs to match Proxmox VE setup before running the test
-# My template ID (must exist in your Proxmox VE)
-MY_TEMPLATE_ID = 100
-# Test VM ID (will be created during the test; must not already exist in your Proxmox VE)
-TEST_VM_ID = 999
+def run_automated_demo():
+    adapter = ProxmoxAdapter()
+    
+    # Configuration
+    TEMPLATE_ID = 100 
+    NEW_BRIDGE = "vmbr1"
+    JB_ID, TG_ID = 401, 402
 
+    print("--- STARTING FULL DEPLOYMENT ---")
 
-def run_test():
-    print("[INFO] Connecting to Proxmox...")
-    try:
-        adapter = ProxmoxAdapter()
+    # 1. Create the Internal Bridge (The Virtual Switch)
+    adapter.create_bridge(NEW_BRIDGE, "Internal Lab Segment")
 
-        print(f"[INFO] Cloning Template {MY_TEMPLATE_ID} to VM {TEST_VM_ID}...")
-        adapter.clone_node(MY_TEMPLATE_ID, TEST_VM_ID, "Integration-Test-VM")
+    # 2. Deploy Jumpbox (The Router/Pivot)
+    print(f"Cloning Jumpbox {JB_ID}...")
+    adapter.clone_node(TEMPLATE_ID, JB_ID, "demo-jumpbox")
+    
+    # Matching the dictionary format your adapter expects:
+    print(f"Configuring Jumpbox Network & IPs...")
+    adapter.configure_network(JB_ID, [
+        {"bridge": "vmbr0", "ip": "dhcp"},        # Management/Internet
+        {"bridge": NEW_BRIDGE, "ip": "10.0.0.1/24"} # Internal Lab
+    ])
 
-        print("[INFO] Configuring Network (vmbr0)...")
-        adapter.configure_network(TEST_VM_ID, ["vmbr0"])
+    # 3. Deploy Isolated Target
+    print(f"Cloning Target {TG_ID}...")
+    adapter.clone_node(TEMPLATE_ID, TG_ID, "demo-target")
+    
+    print(f"Configuring Target Network & IPs...")
+    adapter.configure_network(TG_ID, [
+        {"bridge": NEW_BRIDGE, "ip": "10.0.0.2/24"} # Internal Lab ONLY
+    ])
 
-        print("[SUCCESS] Check your Proxmox UI to see the new VM.")
-        print("To clean up, you can now run: adapter.delete_vm(999)")
+    # 4. Power Everything On
+    print("⚡ Booting Range...")
+    adapter.start_vm(JB_ID)
+    adapter.start_vm(TG_ID)
 
-    except Exception as e:
-        print(f"[FAILURE] TEST FAILED: {e}")
-
+    print("\nFULLY AUTOMATED DEPLOYMENT COMPLETE")
+    print("-" * 30)
+    print(f"Jumpbox: VM {JB_ID} -> 10.0.0.1")
+    print(f"Target:  VM {TG_ID} -> 10.0.0.2")
+    print("-" * 30)
 
 if __name__ == "__main__":
-    run_test()
+    run_automated_demo()

@@ -14,6 +14,12 @@ class MockAdapter(ICloudAdapter):
         print("Initialised MockAdapter")
         self.deployed_vms: list[int] = []
 
+    def create_bridge(self, name: str, comment: str):
+        print(f"MOCK: Created bridge {name} ({comment})")
+
+    def start_vm(self, vmid):
+        print(f"MOCK: Started VM {vmid}")
+
     def get_cluster_status(self) -> list[Any]:
         """Simulates a healthy 3-node cluster"""
         return [

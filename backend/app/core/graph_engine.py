@@ -18,11 +18,44 @@ class GraphEngine:
         self.graph = nx.Graph()
         self._build_graph()
 
-        # Pre-compute bridge mapping
+        # Pre-compute bridge mapping (vmbr100, vmbr101, etc.)
         self.bridge_map = {
             tuple(sorted((u, v))): f"vmbr{i + 100}"
             for i, (u, v) in enumerate(self.graph.edges())
         }
+
+    def _build_graph(self) -> None:
+        for node in self.request.nodes:
+            self.graph.add_node(str(node.id), label=node.label, role=node.role)
+        for edge in self.request.links:
+            self.graph.add_edge(str(edge.source), str(edge.target))
+
+    def get_required_bridges(self) -> list[str]:
+        """Returns the list of unique bridge names needed for this topology."""
+        return list(self.bridge_map.values())
+
+    def get_node_interfaces(self, node_id: str) -> list[dict]:
+        interfaces = []
+        node_id_str = str(node_id)
+        
+        if node_id_str not in self.graph:
+            return []
+
+        # 1. Management Net for Jumpbox
+        if self.graph.nodes[node_id_str].get("role") == "jumpbox_main":
+            interfaces.append({"bridge": "vmbr0", "ip": "dhcp"})
+
+        # 2. Lab Nets for all connections
+        for i, (edge, bridge_name) in enumerate(self.bridge_map.items()):
+            if node_id_str in edge:
+                # Consistent IP suffix based on edge order
+                ip_suffix = "1" if node_id_str == edge[0] else "2"
+                interfaces.append({
+                    "bridge": bridge_name,
+                    "ip": f"10.0.{i}.{ip_suffix}/24"
+                })
+
+        return interfaces
 
     def _build_graph(self) -> None:
         """Constructs the graph from the request's nodes and links."""
